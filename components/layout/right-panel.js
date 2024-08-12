@@ -17,10 +17,10 @@ import {
 	TextField,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+// import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+// import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
+// import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+// import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 import { formatLabel, isEmpty, getType, isDate, formatDatetime } from "../../utilities/helper";
 import { DoneAll as CheckIcon } from "@mui/icons-material";
@@ -387,7 +387,7 @@ const DateField = ({ field, data, setData, isDisabled, selectedTab }) => {
 	return (
 		<WrapperTab tab={tab} selectedTab={selectedTab}>
 			<FormControl variant="standard">
-				<LocalizationProvider dateAdapter={AdapterDateFns}>
+				{/* <LocalizationProvider dateAdapter={AdapterDateFns}>
 					<DateTimePicker
 						label={name}
 						value={data[key] ? new Date(data[key]) : null}
@@ -395,7 +395,7 @@ const DateField = ({ field, data, setData, isDisabled, selectedTab }) => {
 						slotProps={{ textField: { variant: "standard" } }}
 						disabled={edit === false ? true : isDisabled}
 					/>
-				</LocalizationProvider>
+				</LocalizationProvider> */}
 			</FormControl>
 		</WrapperTab>
 	);
