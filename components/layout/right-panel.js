@@ -1,47 +1,28 @@
-import axios from "axios";
-import { useEffect, useRef, useState } from "react";
-import {
-	Select,
-	FormControl,
-	MenuItem,
-	InputLabel,
-	Input,
-	Hidden,
-	Table,
-	TableHead,
-	TableRow,
-	TableCell,
-	TableBody,
-	IconButton,
-	Menu,
-	TextField,
-} from "@mui/material";
+import { Search as SearchIcon } from "@mui/icons-material";
+import { FormControl, IconButton, Input, InputLabel, Menu, MenuItem, Select, Table, TableBody, TableCell, TableHead, TableRow, TextField, Tooltip } from "@mui/material";
+import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-// import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-// import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-// import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-// import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import axios from "axios";
+import moment from "moment";
+import { useEffect, useRef, useState } from "react";
 
-import { formatLabel, isEmpty, getType, isDate, formatDatetime } from "../../utilities/helper";
-import { DoneAll as CheckIcon } from "@mui/icons-material";
-import { showError, showSuccess } from "../notifications";
-import { SaveBtn, EditBtn, CloseBtn, ArrowRightBtn, ClearBtn, AddBtn } from "./buttons";
-import { Add as AddIcon, ArrowForwardIos as ArrowRight, ArrowBackIos as ArrowLeft } from "@mui/icons-material";
-import ListPanel from "./list-panel";
+import { Add as AddIcon, ArrowBackIos as ArrowLeft, ArrowForwardIos as ArrowRight, DoneAll as CheckIcon } from "@mui/icons-material";
+import { formatDatetime, formatLabel, isDate, isEmpty } from "../../utilities/helper";
 import { getSchema } from "../../utilities/schema";
+import { getTabs } from "../../utilities/tab";
+import { showError } from "../notifications";
+import { ClearBtn, CloseBtn, EditBtn, SaveBtn } from "./buttons";
+import ListPanel from "./list-panel";
 
-// Skip these columns
-const columeSkip = ["id", "createdAt", "updatedAt", "created_by", "updated_by"];
-
-export default function RightPanel({ table, lang, schema, rightPanelData, setRightPanelData, setShow, setRows, enumerators, displayName, tabs }) {
+export default function RightPanel({ table, lang, rightPanelData, onClose, handleCreate, handleUpdate, enumerators }) {
 	const [data, setData] = useState({});
 	const [loading, setLoading] = useState(false);
 	const [selectedTab, setSelectedTab] = useState(0);
 	const isCreate = rightPanelData.id ? false : true;
 	const [isDisabled, setIsDisabled] = useState(!isCreate);
 	const tabMap = getSchema(table, lang);
-	// Hardcode to don't show old way
-	schema = [];
+	const tabs = getTabs(table, lang);
 
 	// Get the data for the record
 	useEffect(() => {
@@ -73,42 +54,15 @@ export default function RightPanel({ table, lang, schema, rightPanelData, setRig
 		setLoading(true);
 
 		// Save the record
-		// const data = getFormData();
-		isCreate ? await handleCreate() : await handleUpdate();
+		isCreate ? await handleCreate(data) : await handleUpdate(data);
 		setLoading(false);
-	};
-
-	// Create a new record
-	const handleCreate = async () => {
-		try {
-			const res = await axios.post(`/${table}`, data);
-			setRows((prev) => [...prev, res]);
-			showSuccess("Record created successfully");
-
-			handleClose();
-		} catch (err) {
-			showError(err);
-		}
-	};
-
-	// Update a record
-	const handleUpdate = async () => {
-		try {
-			const res = await axios.put(`/${table}/${data.id}`, data);
-			setRows((prev) => prev.map((row) => (row.id === res.id ? res : row)));
-			showSuccess("Record updated successfully");
-
-			handleClose();
-		} catch (err) {
-			showError(err);
-		}
+		handleClose();
 	};
 
 	// Close the modal
 	const handleClose = () => {
-		setShow(false);
 		setData({});
-		setRightPanelData({});
+		onClose();
 	};
 
 	const handleLeftScroll = () => {
@@ -122,13 +76,14 @@ export default function RightPanel({ table, lang, schema, rightPanelData, setRig
 	};
 
 	return (
-		<div className="fixed top-0 left-0 z-50 w-screen h-screen bg-white border-t-4 border-primary">
+		<div className="fixed flex flex-col top-0 left-0 z-50 w-screen h-screen bg-white border-t-4 border-primary">
 			{/* Header */}
-			<div className="flex items-center border-b-[1px] px-4 border-gray-200 justify-between h-[64px]">
+			<div className="flex items-center border-b-[1px] px-4 border-gray-200 justify-between h-[64px] min-h-[64px]">
 				{/* Title */}
 				<div className="">
-					<div className="text-xs font-light text-gray-500">{!isCreate ? `${table.toUpperCase() + " #" + data.id}` : "New"}</div>
-					<div>{data[displayName]}</div>
+					<div className="text-xs font-light text-gray-500">
+						{!isCreate ? `${formatLabel(table.toUpperCase(), false) + " #" + data?.id || ""}` : `NEW ${formatLabel(table, false).toUpperCase()}`}
+					</div>
 				</div>
 				{/* Toolbar */}
 				<div className="flex items-center justify-center gap-1">
@@ -139,8 +94,9 @@ export default function RightPanel({ table, lang, schema, rightPanelData, setRig
 			</div>
 
 			{/* Tabs */}
-			<div className="flex h-[48px] w-full items-center px-4 border-b-[1px] border-gray-200">
+			<div className="flex h-[48px] min-h-[48px] w-full items-center px-4 border-b-[1px] border-gray-200">
 				<ArrowLeft sx={{ fontSize: 16, cursor: "pointer" }} onClick={handleLeftScroll} />
+
 				<div id="tab-scroll" className="overflow-x-hidden flex-1 h-full flex gap-4">
 					{tabs.map((tab, i) => (
 						<div
@@ -160,158 +116,27 @@ export default function RightPanel({ table, lang, schema, rightPanelData, setRig
 			</div>
 
 			{/* Body */}
-			<form id="table-form" className="flex flex-wrap py-4 table-holder">
+			<form id="table-form" className="flex flex-wrap py-4 overflow-y-auto pb-[16px]">
 				{tabMap.map((field, i) => {
 					const type = field.type;
 
-					if (type === "input")
-						return <InputField key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
+					if (type === "input") return <InputField key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
 
-					if (type === "text")
-						return (
-							<TextareaField key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />
-						);
+					if (type === "text") return <TextareaField key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
 
 					if (type === "boolean")
-						return <BooleanField key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
+						return <BooleanField key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} lang={lang} />;
 
-					if (type === "date")
-						return <DateField key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
+					if (type === "date") return <DateField key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
 
-					if (type === "nummber")
-						return <NummberField key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
+					if (type === "nummber") return <NummberField key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
 
-					if (type === "search")
-						return <InputSearch key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
+					if (type === "search") return <InputSearch key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
 
 					if (type === "enum")
-						return (
-							<InputEnum
-								key={i}
-								enumerators={enumerators}
-								field={field}
-								data={data}
-								setData={setData}
-								isDisabled={isDisabled}
-								selectedTab={selectedTab}
-							/>
-						);
+						return <InputEnum key={i} enumerators={enumerators} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
 
-					if (type === "table")
-						return <TableField key={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
-				})}
-
-				{/* OLD WAY FROM SCHEMA */}
-				{schema.map((field, i) => {
-					const { column_name, data_type, is_nullable, constraint_name, foreign_table_nama, foreign_schema_nama } = field;
-					const type = getType(data_type);
-					const findTab = 0;
-
-					// Skip these columns
-					if (columeSkip.includes(column_name)) return null;
-
-					// Check if the column is nullable
-					const isNullable = is_nullable == "NO" ? true : false;
-					// Check if the column is a foreign key
-					// Enumerators and Seacrch API
-					if (constraint_name) {
-						if (constraint_name.includes("fkey")) {
-							// Return enumerator
-							if (foreign_schema_nama === "common") {
-								const enumerator = enumerators[foreign_table_nama];
-								if (!enumerator) return null;
-
-								const findEnumerator = enumerator.find((item) => item.id === data[column_name]);
-								return (
-									<WrapperTab tab={findTab} selectedTab={selectedTab} key={i}>
-										<FormControl variant="standard">
-											<ClearBtn
-												className={`absolute ${
-													isDisabled ? "text-gray-300" : "text-gray-700"
-												} right-[30px] bottom-[8px] z-10`}
-												onClick={() =>
-													!isDisabled &&
-													setData({
-														...data,
-														[column_name]: null,
-													})
-												}
-											/>
-											<InputLabel htmlFor={`input-${i}`}>{formatLabel(column_name)}</InputLabel>
-											<Select
-												id={`input-${i}`}
-												value={findEnumerator?.id || ""}
-												label={formatLabel(column_name)}
-												onChange={(e) =>
-													setData({
-														...data,
-														[column_name]: e.target.value,
-													})
-												}
-												disabled={isDisabled}
-											>
-												{/* No recourds in database */}
-												{enumerator.length === 0 && (
-													<MenuItem value="">
-														<em>No data for enumerator</em>
-													</MenuItem>
-												)}
-												{/* Render enumerators items */}
-												{enumerator.map((item, i) => (
-													<MenuItem key={i} value={item.id}>
-														{item.name}
-													</MenuItem>
-												))}
-											</Select>
-										</FormControl>
-									</WrapperTab>
-								);
-							}
-
-							// Return search API
-							if (foreign_schema_nama === "data") {
-								return (
-									<SearchAPI
-										key={i}
-										index={i}
-										column_name={column_name}
-										isDisabled={isDisabled}
-										data={data}
-										setData={setData}
-										table={foreign_table_nama}
-										tab={findTab}
-										selectedTab={selectedTab}
-									/>
-								);
-							}
-						}
-					}
-
-					// Default input field
-					return (
-						<WrapperTab tab={findTab} selectedTab={selectedTab} key={i}>
-							<FormControl variant="standard">
-								<InputLabel htmlFor={`input-${i}`} className="label-table">
-									{formatLabel(column_name)} {isNullable ? "*" : ""}
-								</InputLabel>
-								<Input
-									id={`input-${i}`}
-									data-colume={column_name}
-									type="text"
-									value={data[column_name] || ""}
-									onChange={(e) =>
-										setData({
-											...data,
-											[column_name]: e.target.value,
-										})
-									}
-									required={isNullable}
-									className="input-table"
-									disabled={isDisabled}
-								/>
-							</FormControl>
-						</WrapperTab>
-					);
+					if (type === "table") return <TableField key={i} index={i} field={field} data={data} setData={setData} isDisabled={isDisabled} selectedTab={selectedTab} />;
 				})}
 			</form>
 		</div>
@@ -332,6 +157,7 @@ const InputField = ({ field, data, setData, isDisabled, selectedTab }) => {
 					onChange={(e) => setData({ ...data, [key]: e.target.value })}
 					required={required}
 					disabled={edit === false ? true : isDisabled}
+					autoComplete="off"
 				/>
 			</FormControl>
 		</WrapperTab>
@@ -361,18 +187,24 @@ const NummberField = ({ field, data, setData, isDisabled, selectedTab }) => {
 	);
 };
 
-const BooleanField = ({ field, data, setData, isDisabled, selectedTab }) => {
+const BooleanField = ({ field, data, setData, isDisabled, selectedTab, lang }) => {
 	const { name, key, type, link, tab, required } = field;
 
 	return (
 		<WrapperTab tab={tab} selectedTab={selectedTab}>
 			<FormControl variant="standard">
+				{data[key] !== null && (
+					<ClearBtn
+						className={`absolute cursor-pointer ${isDisabled ? "text-gray-300" : "text-gray-700"} right-[30px] bottom-[8px] z-10`}
+						onClick={() => !isDisabled && setData({ ...data, [key]: null })}
+					/>
+				)}
 				<InputLabel>
 					{name} {required ? "*" : ""}
 				</InputLabel>
-				<Select value={data[key] || ""} onChange={(e) => setData({ ...data, [key]: e.target.value })} disabled={isDisabled}>
-					<MenuItem value={1}>True</MenuItem>
-					<MenuItem value={0}>False</MenuItem>
+				<Select value={data[key] === null ? "" : data[key]} onChange={(e) => setData({ ...data, [key]: e.target.value })} disabled={isDisabled}>
+					<MenuItem value={true}>{lang === "en" ? "True" : "Ja"}</MenuItem>
+					<MenuItem value={false}>{lang === "en" ? "False" : "Nein"}</MenuItem>
 				</Select>
 			</FormControl>
 		</WrapperTab>
@@ -387,15 +219,16 @@ const DateField = ({ field, data, setData, isDisabled, selectedTab }) => {
 	return (
 		<WrapperTab tab={tab} selectedTab={selectedTab}>
 			<FormControl variant="standard">
-				{/* <LocalizationProvider dateAdapter={AdapterDateFns}>
+				<LocalizationProvider dateAdapter={AdapterMoment}>
 					<DateTimePicker
+						format="DD.MM.YYYY hh:mm:ss"
 						label={name}
-						value={data[key] ? new Date(data[key]) : null}
+						value={data[key] ? moment(data[key]) : null}
 						onChange={handleDateChange}
 						slotProps={{ textField: { variant: "standard" } }}
 						disabled={edit === false ? true : isDisabled}
 					/>
-				</LocalizationProvider> */}
+				</LocalizationProvider>
 			</FormControl>
 		</WrapperTab>
 	);
@@ -446,7 +279,7 @@ const InputEnum = ({ enumerators, field, data, setData, isDisabled, selectedTab 
 						)
 					) : (
 						<MenuItem value="">
-							<em>Enumerators not found!</em>
+							<em>Enumerators not found for {link}!</em>
 						</MenuItem>
 					)}
 					{/* Render enumerators items */}
@@ -462,8 +295,9 @@ const InputEnum = ({ enumerators, field, data, setData, isDisabled, selectedTab 
 	);
 };
 
-const TableField = ({ field, data, setData, isDisabled, selectedTab }) => {
+const TableField = ({ field, index, data, setData, isDisabled, selectedTab }) => {
 	const [anchorEl, setAnchorEl] = useState(null);
+	const [createNew, setCreateNew] = useState(false);
 	const open = Boolean(anchorEl);
 
 	const { name, key, type, link, tab, required } = field;
@@ -483,10 +317,13 @@ const TableField = ({ field, data, setData, isDisabled, selectedTab }) => {
 	const handleSelect = () => setShowList(true);
 	const handleCloseListPanel = () => setShowList(false);
 
-	const onSetNewData = (newData) => setData({ ...data, ...data[key], [key]: newData });
+	const onSetNewData = (newData) => {
+		setData({ ...data, ...data[key], [key]: newData });
+	};
 
 	return (
 		<>
+			{createNew && <RightPanel table={link} rightPanelData={{}} handleCreate={handleCreate} setShow={() => setCreateNew(false)} />}
 			{showList && <ListPanel table={link} onClose={handleCloseListPanel} data={preoloadData} setData={onSetNewData} />}
 			<WrapperTabFull tab={tab} selectedTab={selectedTab}>
 				<div className="border-[1px] border-gray-300 border-t-4 border-t-primary">
@@ -513,6 +350,10 @@ const TableField = ({ field, data, setData, isDisabled, selectedTab }) => {
 									transformOrigin={{ horizontal: "right", vertical: "top" }}
 									anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
 								>
+									{/* <MenuItem onClick={() => setCreateNew(true)} className="flex gap-4 items-center">
+										<AddIcon />
+										<span>Crete new {formatLabel(link)}</span>
+									</MenuItem> */}
 									<MenuItem onClick={handleSelect} className="flex gap-4 items-center">
 										<CheckIcon />
 										<span>Select {formatLabel(link)}</span>
@@ -521,17 +362,15 @@ const TableField = ({ field, data, setData, isDisabled, selectedTab }) => {
 							</div>
 						)}
 					</div>
-					<div className="max-h-[215px] min-h-[215px] overflow-y-auto">
-						{keys.length === 0 && preoloadData && (
-							<div className="flex justify-center min-h-[180px] max-h-[215px] items-center w-full h-full">No data</div>
-						)}
+					<div className="max-h-[216px] min-h-[216px] overflow-y-auto">
+						{keys.length === 0 && preoloadData && <div className="flex justify-center min-h-[180px] max-h-[215px] items-center w-full h-full">No data</div>}
 						<FormControl variant="standard" className="w-full">
 							<Table>
-								<TableHead>
+								<TableHead style={{ position: "sticky", left: 0, top: 0, background: "#fff" }}>
 									<TableRow>
 										{data[key] &&
 											keys.map((k, i) => {
-												return <TableCell key={`th-${i}`}>{formatLabel(k)}</TableCell>;
+												return <TableCell key={`th-${index}-${i}`}>{formatLabel(k)}</TableCell>;
 											})}
 									</TableRow>
 								</TableHead>
@@ -539,10 +378,10 @@ const TableField = ({ field, data, setData, isDisabled, selectedTab }) => {
 									data[key].length > 0 &&
 									data[key].map((item, i) => {
 										return (
-											<TableBody key={`td-${i}`}>
+											<TableBody key={`td-${index}-${i}`}>
 												<TableRow>
 													{keys.map((k, i) => (
-														<TableCell>{isDate(item[k]) ? formatDatetime(item[k]) : item[k]}</TableCell>
+														<TableCell key={i}>{isDate(item[k]) ? formatDatetime(item[k]) : item[k]}</TableCell>
 													))}
 												</TableRow>
 											</TableBody>
@@ -613,10 +452,16 @@ const InputSearch = ({ field, data, setData, isDisabled, selectedTab }) => {
 	const handleSelectItem = (e) => {
 		const name = e.target.innerText;
 		const findItem = results.find((item) => item.name === name);
+		if (!findItem) return;
 		setData({ ...data, [key]: findItem.id });
 		setInputValue(name);
 		setShowDropdown(false);
 		setResults(null);
+	};
+
+	const handleClear = () => {
+		!isDisabled && setData({ ...data, [key]: null });
+		setInputValue("");
 	};
 
 	const Item = ({ name }) => (
@@ -628,12 +473,14 @@ const InputSearch = ({ field, data, setData, isDisabled, selectedTab }) => {
 	return (
 		<WrapperTab tab={tab} selectedTab={selectedTab}>
 			<FormControl variant="standard" className="relative" style={{ position: "relative" }}>
-				{data[key] && (
-					<ClearBtn
-						className={`absolute cursor-pointer ${isDisabled ? "text-gray-300" : "text-gray-700"} right-[4px] bottom-[8px] z-10`}
-						onClick={() => !isDisabled && setData({ ...data, [key]: null })}
-					/>
-				)}
+				<div className={`flex items-center absolute ${isDisabled ? "text-gray-300" : "text-gray-700"} z-10 right-[4px] bottom-[8px] gap-4`}>
+					{data[key] && <ClearBtn onClick={handleClear} />}
+
+					<Tooltip title={`Search by: ${formatLabel(searchBy, false)}`}>
+						<SearchIcon />
+					</Tooltip>
+				</div>
+
 				<InputLabel>{name}</InputLabel>
 				<Input
 					value={inputValue}
@@ -643,7 +490,7 @@ const InputSearch = ({ field, data, setData, isDisabled, selectedTab }) => {
 					disabled={isDisabled}
 				/>
 				{showDropdown && results && results.length > 0 ? (
-					<div className="absolute w-full max-h-[200px] overflow-y-scroll bg-white border top-[46px] shadow-lg rounded-xl  left-0 border-gray-200 mt-1">
+					<div className="absolute z-20 w-full max-h-[200px] overflow-y-scroll bg-white border top-[46px] shadow-lg rounded-xl  left-0 border-gray-200 mt-1">
 						{results.map((item, i) => (
 							<Item key={i} name={item.name} />
 						))}
@@ -652,13 +499,17 @@ const InputSearch = ({ field, data, setData, isDisabled, selectedTab }) => {
 					showDropdown && !results && <Item name={`Minimum ${minChars} characters`} />
 				)}
 				{loading && (
-					<div className="absolute top-0 right-0 bottom-0 left-0 bg-white bg-opacity-50 z-10">
+					<div className="absolute top-0 right-0 bottom-0 left-0 bg-white bg-opacity-50 z-20">
 						<div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
 							<div className="w-6 h-6 border-2 border-primary rounded-full animate-spin"></div>
 						</div>
 					</div>
 				)}
-				{results && results.length === 0 && search.length > minChars && <Item name="No results found" style={{ cursor: "not-allowed" }} />}
+				{results && results.length === 0 && search.length > minChars && (
+					<div className="absolute z-20 w-full max-h-[200px] overflow-y-scroll bg-white border top-[46px] shadow-lg rounded-xl  left-0 border-gray-200 mt-1">
+						<Item name="No results found" style={{ cursor: "not-allowed" }} />
+					</div>
+				)}
 			</FormControl>
 
 			<Input style={{ display: "none" }} value={data[key] || ""} onChange={(e) => setData({ ...data, [key]: e.target.value })} />
@@ -668,7 +519,7 @@ const InputSearch = ({ field, data, setData, isDisabled, selectedTab }) => {
 
 const WrapperTab = ({ children, tab, selectedTab }) => {
 	if (tab !== selectedTab) return null;
-	return <div className="grid w-1/2 flex-col px-4 py-2">{children}</div>;
+	return <div className="flex w-1/2 flex-col px-4 py-2">{children}</div>;
 };
 
 const WrapperTabFull = ({ children, tab, selectedTab }) => {
@@ -777,11 +628,7 @@ const SearchAPI = ({ index, tab, selectedTab, data, setData, table, column_name,
 				{results && results.length === 0 && search.length > minChars && <Item name="No results found" style={{ cursor: "not-allowed" }} />}
 			</FormControl>
 
-			<Input
-				style={{ display: "none" }}
-				value={data[column_name] || ""}
-				onChange={(e) => setData({ ...data, [column_name]: e.target.value })}
-			/>
+			<Input style={{ display: "none" }} value={data[column_name] || ""} onChange={(e) => setData({ ...data, [column_name]: e.target.value })} />
 		</WrapperTab>
 	);
 };

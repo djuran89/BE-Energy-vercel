@@ -55,10 +55,12 @@ export function getType(type) {
 }
 
 export function capitalize(word) {
+	if (!word) return "";
 	return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 export function formatLabel(word, plural = false) {
+	if (!word) return "";
 	// Check for special cases
 	word = formatSpecialCases(word);
 

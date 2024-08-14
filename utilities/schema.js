@@ -94,7 +94,7 @@ const schema = [
 					de: "",
 				},
 				key: "grid_connection_status_id",
-				link: "grid_connection_status",
+				link: "status_grid",
 				type: "enum",
 				tab: 4,
 			},
@@ -140,7 +140,7 @@ const schema = [
 					de: "Rechtskräftig",
 				},
 				key: "notice_legally_binding",
-				type: "date",
+				type: "boolean",
 				tab: 4,
 			},
 			{
@@ -163,17 +163,17 @@ const schema = [
 				decimal: 0,
 				tab: 4,
 			},
-			{
-				name: {
-					en: "Company",
-					de: "Firma",
-				},
-				key: "company_id",
-				type: "search",
-				search: "company",
-				link: "company",
-				tab: 5,
-			},
+			// {
+			// 	name: {
+			// 		en: "Company",
+			// 		de: "Firma",
+			// 	},
+			// 	key: "company_id",
+			// 	type: "search",
+			// 	search: "company",
+			// 	link: "company",
+			// 	tab: 5,
+			// },
 			{
 				name: {
 					en: "SPV",
@@ -227,7 +227,7 @@ const schema = [
 					de: "Bezirk",
 				},
 				key: "district_id",
-				type: "search",
+				type: "enum",
 				link: "district",
 				tab: 2,
 			},
@@ -342,7 +342,7 @@ const schema = [
 				},
 				key: "mw_grid_relevant_unit_id",
 				type: "enum",
-				link: "mw_grid_relevant_unit",
+				link: "unit",
 				tab: 3,
 			},
 			{
@@ -400,7 +400,7 @@ const schema = [
 				},
 				key: "properties_secured_unit_id",
 				type: "enum",
-				link: "properties_secured_unit",
+				link: "unit",
 				tab: 2,
 			},
 			{
@@ -420,7 +420,7 @@ const schema = [
 				},
 				key: "project_area_unit_id",
 				type: "enum",
-				link: "project_area_unit",
+				link: "unit",
 				tab: 2,
 			},
 			{
@@ -583,44 +583,60 @@ const schema = [
 			},
 			{
 				name: {
-					en: "Created At",
+					en: "Compnaies",
 					de: "",
 				},
-				key: "createdAt",
-				type: "date",
-				edit: false,
-				tab: 9,
+				key: "companies",
+				link: "company",
+				type: "table",
+				tab: 5,
+				display: false,
 			},
 			{
 				name: {
-					en: "Updated At",
-					de: "",
+					en: "UW 1",
+					de: "UW 1",
 				},
-				key: "updatedAt",
-				type: "date",
-				edit: false,
-				tab: 9,
+				key: "uw1_substation",
+				link: "substation",
+				type: "table",
+				tab: 6,
+				display: false,
 			},
 			{
 				name: {
-					en: "Created By",
-					de: "",
+					en: "UW 2",
+					de: "UW 2",
 				},
-				key: "created_by",
-				type: "input",
-				edit: false,
-				tab: 9,
+				key: "uw2_substation",
+				link: "substation",
+				type: "table",
+				tab: 6,
+				display: false,
 			},
 			{
 				name: {
-					en: "Updated By",
-					de: "",
+					en: "UW 3",
+					de: "UW 3",
 				},
-				key: "updated_by",
-				type: "input",
-				edit: false,
-				tab: 9,
+				key: "uw3_substation",
+				link: "substation",
+				type: "table",
+				tab: 6,
+				display: false,
 			},
+			{
+				name: {
+					en: "UW 4",
+					de: "UW 4",
+				},
+				key: "uw4_substation",
+				link: "substation",
+				type: "table",
+				tab: 6,
+				display: false,
+			},
+			...defaultSystem(9),
 		],
 	},
 	{
@@ -646,6 +662,7 @@ const schema = [
 				type: "input",
 				tab: 0,
 				display: true,
+				required: true,
 			},
 			{
 				name: {
@@ -659,6 +676,7 @@ const schema = [
 				tab: 0,
 				display: true,
 			},
+			...defaultSystem(1),
 		],
 	},
 	{
@@ -675,14 +693,70 @@ const schema = [
 				required: true,
 				display: true,
 			},
+			{
+				name: {
+					en: "Spv id",
+					de: "Spv id",
+				},
+				key: "spvid",
+				type: "nummber",
+				decimal: 0,
+				tab: 0,
+				display: true,
+			},
+			...defaultSystem(1),
 		],
 	},
-
 	// {
 	// 	schemaName: "",
 	// 	schema: [],
 	// },
 ];
+
+function defaultSystem(tab) {
+	return [
+		{
+			name: {
+				en: "Created At",
+				de: "",
+			},
+			key: "createdAt",
+			type: "date",
+			edit: false,
+			tab,
+		},
+		{
+			name: {
+				en: "Updated At",
+				de: "",
+			},
+			key: "updatedAt",
+			type: "date",
+			edit: false,
+			tab,
+		},
+		{
+			name: {
+				en: "Created By",
+				de: "",
+			},
+			key: "created_by",
+			type: "input",
+			edit: false,
+			tab,
+		},
+		{
+			name: {
+				en: "Updated By",
+				de: "",
+			},
+			key: "updated_by",
+			type: "input",
+			edit: false,
+			tab,
+		},
+	];
+}
 
 export const getSchema = (table, lang = "en", onlyDisplay = false) => {
 	if (!table) return [];

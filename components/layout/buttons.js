@@ -1,16 +1,9 @@
-import {
-	Save as SaveIcon,
-	KeyboardDoubleArrowRight as ArrowRightIcon,
-	Close as CloseIcon,
-	Add as AddIcon,
-	Edit as EditIcon,
-	Backspace as ClearIcon,
-} from "@mui/icons-material";
+import { Save as SaveIcon, KeyboardDoubleArrowRight as ArrowRightIcon, Close as CloseIcon, Add as AddIcon, Edit as EditIcon, Backspace as ClearIcon } from "@mui/icons-material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import { Button, Tooltip, IconButton } from "@mui/material";
 
 export const SaveBtn = ({ onClick, loading }) => (
-	<LoadingButton size="small" onClick={onClick} loading={loading} loadingPosition="start" startIcon={<SaveIcon />} variant="contained">
+	<LoadingButton color="primary" size="small" onClick={onClick} loading={loading} loadingPosition="start" startIcon={<SaveIcon />} variant="contained">
 		<span>Save</span>
 	</LoadingButton>
 );

@@ -4,7 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 const theme = "colored";
 const configtToast = {
 	isLoading: false,
-	position: "top-right",
+	position: "bottom-center",
 	autoClose: 3000,
 	hideProgressBar: false,
 	closeOnClick: true,

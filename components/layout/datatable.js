@@ -1,15 +1,14 @@
 import { Add } from "@mui/icons-material";
-import { Button } from "@mui/material";
+import { Button, colors } from "@mui/material";
 import { DataGrid, GridCsvExportMenuItem, GridToolbarContainer, GridToolbarExportContainer } from "@mui/x-data-grid";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import Loading from "./loading";
-import { showError } from "../notifications";
+import { showError, showSuccess } from "../notifications";
 import { formatDatetime, getType, pluralize, formatLabel } from "../../utilities/helper";
 import RightPanel from "./right-panel";
 import { CreateNewBtn } from "./buttons";
 import { getSchema } from "../../utilities/schema";
-import { getTabs } from "../../utilities/tab";
 
 // Export CSV options
 const csvOptions = { delimiter: ";" };
@@ -24,7 +23,6 @@ export default function Datatable(props) {
 	const [rightPanelData, setRightPanelData] = useState({});
 
 	const schema = getSchema(table, lang, true);
-	const tabs = getTabs(table, lang);
 	const columns = getColumesFromSchema(table, schema, enumerators);
 	// console.log("schema", schema);
 
@@ -63,7 +61,34 @@ export default function Datatable(props) {
 
 	// Handler function for creating new records
 	const handleOnCreateNew = () => {
+		setRightPanelData({});
 		setShowRightPanel(true);
+	};
+
+	// Create a new record
+	const handleCreate = async (data) => {
+		try {
+			const res = await axios.post(`/${table}`, data);
+			setRows((prev) => [...prev, res]);
+			showSuccess("Record created successfully");
+		} catch (err) {
+			showError(err);
+		}
+	};
+
+	// Update a record
+	const handleUpdate = async (data) => {
+		try {
+			const res = await axios.put(`/${table}/${data.id}`, data);
+			setRows((prev) => prev.map((row) => (row.id === res.id ? res : row)));
+			showSuccess("Record updated successfully");
+		} catch (err) {
+			showError(err);
+		}
+	};
+
+	const handleOnCloseRightPanel = () => {
+		setShowRightPanel(false);
 	};
 
 	return (
@@ -72,24 +97,16 @@ export default function Datatable(props) {
 			{showRightPanel && (
 				<RightPanel
 					rightPanelData={rightPanelData}
-					setRightPanelData={setRightPanelData}
 					table={table}
-					schema={schema}
-					setShow={setShowRightPanel}
-					setRows={setRows}
+					handleCreate={handleCreate}
+					handleUpdate={handleUpdate}
 					enumerators={enumerators}
-					tabs={tabs}
+					onClose={handleOnCloseRightPanel}
 					lang={lang}
 				/>
 			)}
 			<div className="rounded-md border-primary border-t-4">
-				<DataGrid
-					rows={rows}
-					columns={columns}
-					slots={{ toolbar: CustomToolbar }}
-					sortModel={[{ field: "id", sort: "desc" }]}
-					onRowDoubleClick={handleRowDoubleClick}
-				/>
+				<DataGrid rows={rows} columns={columns} slots={{ toolbar: CustomToolbar }} sortModel={[{ field: "id", sort: "desc" }]} onRowDoubleClick={handleRowDoubleClick} />
 			</div>
 		</div>
 	);
@@ -109,6 +126,7 @@ const getColumesFromSchema = (table, schema, enumerators) => {
 		}
 
 		if (type === "enum") {
+			if (!enumerators) return defaultColume;
 			const enumerator = enumerators[link];
 			return {
 				...defaultColume,
@@ -175,7 +193,7 @@ const getColumesFromSchema = (table, schema, enumerators) => {
 };
 
 const ExportButton = (props) => (
-	<GridToolbarExportContainer {...props}>
+	<GridToolbarExportContainer {...props} sx={{ button: { color: "red", backgroundColor: "blue" } }}>
 		<GridCsvExportMenuItem options={csvOptions} />
 	</GridToolbarExportContainer>
 );

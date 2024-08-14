@@ -6,7 +6,7 @@ export default function CriticalDeadlines({ lang }) {
 	return (
 		<>
 			<Head>
-				<title>Project</title>
+				<title>Critical deadlines</title>
 			</Head>
 
 			<Datatable table="critical_deadlines" lang={lang} />

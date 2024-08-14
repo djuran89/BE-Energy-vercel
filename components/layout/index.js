@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@mui/material";
 import { useEffect, useState } from "react";
+import { CreateNewBtn } from "./buttons";
 
 function Layout({ children }) {
 	const [lang, setLang] = useState("en");
@@ -15,22 +16,22 @@ function Layout({ children }) {
 		localStorage.setItem("lang", value);
 		window.location.reload();
 	};
-
+	return children;
 	return (
 		<>
-			<header className="bg-black text-white justify-between h-[64px] flex z-10 fixed w-screen items-center px-4">
+			{/* <header className="bg-black text-white justify-between h-[64px] flex z-10 fixed w-screen items-center px-4">
 				<div className="flex items-center">
 					<Link href="/">
 						<img className="h-[54px] mr-4" src="/logo.svg" />
 					</Link>
 					<nav className="flex gap-4">
-						<Button size="small" variant="contained" href="/project">
+						<Button color="secondary" size="small" variant="contained" href="/project">
 							Project
 						</Button>
-						<Button size="small" variant="contained" href="/company">
+						<Button size="small" color="primary" variant="contained">
 							Company
 						</Button>
-						<Button size="small" variant="contained" href="/critical_deadlines">
+						<Button color="secondary" size="small" variant="contained" href="/critical_deadlines">
 							Critical Deadlines
 						</Button>
 					</nav>
@@ -44,7 +45,7 @@ function Layout({ children }) {
 					</div>
 				</div>
 			</header>
-			<main className="h-rest w-full pt-[64px]">{children}</main>
+			<main className="h-rest w-full pt-[64px]">{children}</main> */}
 		</>
 	);
 }

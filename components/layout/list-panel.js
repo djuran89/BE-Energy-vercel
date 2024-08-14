@@ -1,8 +1,10 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
+import { DataGrid } from "@mui/x-data-grid";
+
+import { showError } from "../notifications";
 import { formatLabel } from "../../utilities/helper";
 import { CloseBtn, SaveBtn, AddBtn } from "./buttons";
-import axios from "axios";
-import { DataGrid } from "@mui/x-data-grid";
 import { getSchema } from "../../utilities/schema";
 
 function ListPanel({ table, onClose, data, setData }) {
@@ -22,9 +24,7 @@ function ListPanel({ table, onClose, data, setData }) {
 				setRows(res);
 				setSelectedRows(data.map((el) => el.id));
 			})
-			.catch((err) => {
-				console.log(err);
-			});
+			.catch((err) => showError(err));
 	}, []);
 
 	const handleSelectionChange = (newSelection) => setSelectedRows(newSelection);
@@ -37,24 +37,18 @@ function ListPanel({ table, onClose, data, setData }) {
 
 	return (
 		<div className="flex flex-col fixed z-20 w-screen h-screen bg-white top-0 left-0 border-t-2 border-t-primary">
-			<div className="flex w-full justify-between items-center h-[64px] px-4 border-b-[1px] border-gray-300">
+			<div className="flex w-full justify-between items-center px-4 py-4 border-b-[1px] border-gray-300">
 				<span>Select {formatLabel(table)}</span>
 				<div>
 					{/* <SaveBtn onClick={handleOnSave} /> */}
 					<CloseBtn onClick={onClose} />
 				</div>
 			</div>
-			<div className="flex px-4 items-center h-[48px]">
+			<div className="flex px-2 items-center py-2">
 				<AddBtn onClick={handleOnSave} />
 			</div>
-			<div>
-				<DataGrid
-					rows={rows}
-					columns={columns}
-					rowSelectionModel={selectedRows}
-					onRowSelectionModelChange={handleSelectionChange}
-					checkboxSelection
-				/>
+			<div className="flex-1 overflow-y-auto">
+				<DataGrid rows={rows} columns={columns} rowSelectionModel={selectedRows} onRowSelectionModelChange={handleSelectionChange} checkboxSelection />
 			</div>
 		</div>
 	);
